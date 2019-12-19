@@ -1,52 +1,84 @@
+name := "http4sexamples"
+version := "0.1"
+scalaVersion := "2.13.1"
+
+// DEPENDENCIES
+lazy val logging ={
+    val logbackV = "1.2.3"
+    val scalaLoggingV = "3.9.2"
+    Seq(
+        "ch.qos.logback" % "logback-classic" % logbackV,
+        "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingV
+    )
+}
+
+lazy val testing = Seq(
+    "org.scalatest" %% "scalatest" % "3.0.8",
+    "com.storm-enroute" %% "scalameter" % "0.19"
+)
 
 lazy val http4s = {
-    val Http4sVersion = "0.20.8"
+    val http4sVersion = "0.21.0-M6"
+    val circeVersion = "0.12.3"
     Seq(
-        "org.http4s"      %% "http4s-blaze-server" % Http4sVersion,
-        "org.http4s"      %% "http4s-blaze-client" % Http4sVersion,
-        "org.http4s"      %% "http4s-circe"        % Http4sVersion,
-        "org.http4s"      %% "http4s-dsl"          % Http4sVersion
+        "org.http4s" %% "http4s-dsl" % http4sVersion,
+        "org.http4s" %% "http4s-blaze-server" % http4sVersion,
+        "org.http4s" %% "http4s-blaze-client" % http4sVersion,
+
+        // Json
+        "org.http4s" %% "http4s-circe" % http4sVersion,
+        // Optional for auto-derivation of JSON codecs
+        "io.circe" %% "circe-generic" % circeVersion,
+        // Optional for string interpolation to JSON model
+        "io.circe" %% "circe-literal" % circeVersion,
+
+        // twirl
+        "org.http4s" %% "http4s-twirl" % http4sVersion
     )
 }
 
-lazy val testing = {
-    val Specs2Version = "4.1.0"
+lazy val akka = {
+    val akkaVersion = "0.5.10"
     Seq(
-        "org.specs2"      %% "specs2-core"         % Specs2Version % "test"
+        "com.softwaremill.akka-http-session" %% "core" % akkaVersion
     )
 }
 
-lazy val logging = {
-    val LogbackVersion = "1.2.3"
-    Seq(
-        "ch.qos.logback"  %  "logback-classic"     % LogbackVersion
+lazy val monix = Seq(
+    "io.monix" %% "monix" % "3.0.0"
+)
+
+// SETTINGS
+lazy val settings = Seq(
+    scalacOptions ++= compilerOptions,
+    resolvers ++= Seq(
+        "Typesafe" at "http://repo.typesafe.com/typesafe/releases/",
+        "Maven2 Repository" at "https://repo1.maven.org/maven2/"
     )
-}
+)
 
-lazy val circe = {
-    val CirceVersion = "0.11.1"
-    Seq(
-        "io.circe"        %% "circe-generic"       % CirceVersion
-    )
-}
-
-lazy val root = (project in file("."))
-  .settings(
-      organization := "com.hibiup.http4s",
-      name := "com/hibiup/http4s/examples",
-      version := "0.0.1-SNAPSHOT",
-      scalaVersion := "2.12.8",
-      libraryDependencies ++= http4s ++ testing ++ logging ++ circe,
-      addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-      addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0")
-  )
-
-scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding", "UTF-8",
-    "-language:higherKinds",
-    "-language:postfixOps",
+lazy val compilerOptions = Seq(
+    "-unchecked",
     "-feature",
+    "-language:existentials",
+    "-language:higherKinds",
+    "-language:implicitConversions",
+    "-language:postfixOps",
+    "-deprecation",
+    "-encoding",
+    "utf8",
     "-Ypartial-unification",
-    "-Xfatal-warnings",
+    "-Xplugin-require:macroparadise",
+)
+
+lazy val http4sExamples = project.in(file(".")).aggregate(
+    Examples
+)
+
+lazy val Examples = project.in(file("example1")).settings(
+    settings,
+    name:="example1",
+    libraryDependencies ++= testing ++ logging ++ http4s ++ akka ++ monix,
+    //addCompilerPlugin("org.scalameta" %% "paradise" % "3.0.0-M11" cross CrossVersion.full),
+    addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4")
 )
