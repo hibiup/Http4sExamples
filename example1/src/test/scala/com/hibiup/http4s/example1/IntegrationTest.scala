@@ -1,42 +1,36 @@
 package com.hibiup.http4s.example1
 
-import java.util.UUID
-
-import cats.implicits._
 import com.hibiup.http4s.example1.common.models.Tweet
 import com.typesafe.scalalogging.StrictLogging
 import org.scalatest.FlatSpec
-import org.http4s.client._
 import org.http4s.client.dsl.io._
-import org.http4s.client.blaze._
 import org.http4s.Method._
 import cats.effect._
-import com.hibiup.http4s.example1.Main.routes
 import com.hibiup.http4s.example1.controllers.TweetController
 import org.http4s.client.blaze.BlazeClientBuilder
 import fs2.Stream
+import monix.eval.Task
 import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
 
 
 class IntegrationTest extends FlatSpec with StrictLogging{
     import monix.execution.Scheduler.Implicits.global
     implicit val cs = IO.contextShift(global)
 
-    private def startServer: Fiber[IO, Nothing] ={
-        implicit val timer: Timer[IO] = IO.timer(global)
+    private def startServer: Fiber[Task, Nothing] ={
+        //implicit val timer: Timer[IO] = IO.timer(global)
 
         // 引入特定服务，无需全部引入
         import TweetController.tweetRoutes
 
         import org.http4s.server.blaze._
-        val server = BlazeServerBuilder[IO]
+        val server = BlazeServerBuilder[Task]
           .bindHttp(8080)
           .withHttpApp(tweetRoutes.orNotFound)
           .resource
 
         // 启动服务( start 将它投送到另一空间 )
-        val fiber = server.use(_ => IO.never).start.unsafeRunSync()
+        val fiber = server.use(_ => Task.never).start.runSyncUnsafe()
         fiber
     }
 
@@ -76,6 +70,6 @@ class IntegrationTest extends FlatSpec with StrictLogging{
         }
 
         // 停止服务
-        server.cancel.unsafeRunSync()
+        server.cancel.runSyncUnsafe()
     }
 }

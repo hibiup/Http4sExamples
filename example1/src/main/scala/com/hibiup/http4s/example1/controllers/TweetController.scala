@@ -6,15 +6,20 @@ import cats.implicits._
 import cats.effect._
 import com.hibiup.http4s.example1.common.models._
 import org.http4s.HttpRoutes
-import org.http4s.dsl.io._
 import io.circe.syntax._
 import io.circe.generic.auto._
+import monix.eval.Task
 import org.http4s.circe._
 
 object TweetController{
+    import org.http4s.dsl.Http4sDsl
+    // import org.http4s.dsl.io._
+    val dsl = new Http4sDsl[Task]{}
+    import dsl._
+
     import com.hibiup.http4s.example1.services.TweetServices._
 
-    val tweetRoutes: HttpRoutes[IO]= HttpRoutes.of[IO] {
+    val tweetRoutes: HttpRoutes[Task]= HttpRoutes.of[Task] {
         /**
          * 1) 通常这里需要将用户输入的数据结构转换为后端服务能够接受的数据结构。例如(IntVar(tweetId))：Query parameter -> Int
          *
@@ -43,7 +48,7 @@ object TweetController{
             // 提供异步支持
             import scala.concurrent.Future
             import monix.execution.Scheduler.Implicits.global
-            implicit val cs: ContextShift[IO] = IO.contextShift(global)
+            //implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
             /**
              * 从请求中读取 Json 并转换成 case class
@@ -65,9 +70,9 @@ object TweetController{
                 t <- request.as[Tweet]  // 这里同时用到 EntityDecoder 和 Decoder
 
                 // 立刻生成回复信息（需要 EntityEncoder）
-                resp <- Created(IO.fromFuture(IO(Future{
+                resp <- Created(Task.fromFuture(Future{
                     Tweet(UUID.randomUUID().some, s"${t.message}").asJson
-                })))
+                }))
             } yield resp
         }
     }

@@ -2,7 +2,7 @@ package com.hibiup.http4s.example3.middles
 
 import java.util.UUID
 
-import akka.http.scaladsl.server.{Directive0, Directive1}
+// import akka.http.scaladsl.server.{Directive0, Directive1}
 import cats.Monad
 import cats.implicits._
 import cats.data.{EitherT, Kleisli, OptionT}

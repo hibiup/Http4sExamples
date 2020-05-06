@@ -3,49 +3,61 @@ version := "0.1"
 scalaVersion := "2.13.1"
 
 // DEPENDENCIES
-lazy val logging ={
-    val logbackV = "1.2.3"
-    val scalaLoggingV = "3.9.2"
-    Seq(
-        "ch.qos.logback" % "logback-classic" % logbackV,
-        "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingV
-    )
+lazy val ver = new {
+    val logback = "1.2.3"
+    val scalaLogging = "3.9.2"
+    val scalatest = "3.1.1"
+    val http4s = "0.21.0"
+    val monix = "3.2.1"
+    val zio = "1.0.0-RC18-2"
+    val zioInteropCats = "2.0.0.0-RC13"
+    val circe = "0.13.0"
+    val akka = "0.5.10"
 }
 
+lazy val logging =
+    Seq(
+        "ch.qos.logback" % "logback-classic" % ver.logback,
+        "com.typesafe.scala-logging" %% "scala-logging" % ver.scalaLogging
+    )
+
 lazy val testing = Seq(
-    "org.scalatest" %% "scalatest" % "3.0.8",
+    "org.scalatest" %% "scalatest" % ver.scalatest,
     "com.storm-enroute" %% "scalameter" % "0.19"
 )
 
-lazy val http4s = {
-    val http4sVersion = "0.21.0-M6"
-    val circeVersion = "0.12.3"
+lazy val http4s =
     Seq(
-        "org.http4s" %% "http4s-dsl" % http4sVersion,
-        "org.http4s" %% "http4s-blaze-server" % http4sVersion,
-        "org.http4s" %% "http4s-blaze-client" % http4sVersion,
+        "org.http4s" %% "http4s-dsl" % ver.http4s,
+        "org.http4s" %% "http4s-blaze-server" % ver.http4s,
+        "org.http4s" %% "http4s-blaze-client" % ver.http4s,
 
         // Json
-        "org.http4s" %% "http4s-circe" % http4sVersion,
-        // Optional for auto-derivation of JSON codecs
-        "io.circe" %% "circe-generic" % circeVersion,
-        // Optional for string interpolation to JSON model
-        "io.circe" %% "circe-literal" % circeVersion,
+        "org.http4s" %% "http4s-circe" % ver.http4s,
 
         // twirl
-        "org.http4s" %% "http4s-twirl" % http4sVersion
+        "org.http4s" %% "http4s-twirl" % ver.http4s
     )
-}
 
-lazy val akka = {
-    val akkaVersion = "0.5.10"
+lazy val circe = Seq(
+    // Optional for auto-derivation of JSON codecs
+    "io.circe" %% "circe-generic" % ver.circe,
+    // Optional for string interpolation to JSON model
+    "io.circe" %% "circe-literal" % ver.circe,
+)
+
+lazy val akka =
     Seq(
-        "com.softwaremill.akka-http-session" %% "core" % akkaVersion
+        "com.softwaremill.akka-http-session" %% "core" % ver.akka
     )
-}
 
 lazy val monix = Seq(
-    "io.monix" %% "monix" % "3.0.0"
+    "io.monix" %% "monix" % ver.monix
+)
+
+lazy val zio = Seq(
+    "dev.zio" %% "zio" % ver.zio,
+    "dev.zio" %% "zio-interop-cats" % ver.zioInteropCats
 )
 
 // SETTINGS
@@ -68,7 +80,7 @@ lazy val compilerOptions = Seq(
     "-encoding",
     "utf8",
     "-Ypartial-unification",
-    "-Xplugin-require:macroparadise",
+    //"-Xplugin-require:macroparadise",
 )
 
 lazy val http4sExamples = project.in(file(".")).aggregate(
@@ -78,7 +90,7 @@ lazy val http4sExamples = project.in(file(".")).aggregate(
 lazy val Examples = project.in(file("example1")).settings(
     settings,
     name:="example1",
-    libraryDependencies ++= testing ++ logging ++ http4s ++ akka ++ monix,
+    libraryDependencies ++= testing ++ logging ++ http4s ++ circe ++ zio ++ monix,
     //addCompilerPlugin("org.scalameta" %% "paradise" % "3.0.0-M11" cross CrossVersion.full),
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.4")
-)
+).enablePlugins(SbtTwirl)

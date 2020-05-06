@@ -46,10 +46,15 @@ object MainWithIOApp extends IOApp{
                        * http://localhost:8080/public/res/test.js
                        * http://localhost:8080/public/res/test.css  (NotFound)
                        */
-                      "/public" -> com.hibiup.http4s.example4.staticresources.CustomStaticResourceController.routes(blocker)
+                      "/public" -> com.hibiup.http4s.example4.staticresources.CustomStaticResourceController.routes(blocker),
 
-                      // TODO: Add more route
+                      /**
+                       *
+                       * http://localhost:8080/twirl/tt
+                       */
+                      "/twirl" -> com.hibiup.http4s.example4.staticresources.TwirlResourceController.routes()
                       //
+                      // TODO: Add more route
                   ).orNotFound)
               .resource
         } yield server

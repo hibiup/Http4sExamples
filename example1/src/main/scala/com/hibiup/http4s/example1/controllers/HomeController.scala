@@ -6,12 +6,22 @@ import cats.implicits._
 import cats.effect._
 import com.hibiup.http4s.example1.common.models.Tweet
 import org.http4s.{HttpRoutes, ResponseCookie}
-import org.http4s.dsl.io._
 import io.circe.syntax._
+import monix.eval.Task
 
 object HomeController {
+    /**
+     * Http4sDsl 提供了 http4s为 http 协议提供的元语支持，比如 `Ok`, `Created`, `NoFound`` 等，
+     * 还有 `->`, `/ 等符号，对于缺省的 Cats.IO, 可以直接 import org.http4s.dsl.io._，
+     * 或通过以下方式改变缺省容器，比如改用 Monix Task：
+     */
+    // import org.http4s.dsl.io._
+    import org.http4s.dsl.Http4sDsl
+    val dsl = new Http4sDsl[Task]{}
+    import dsl._
+
     // HttpRoutes[IO] 就是 Kleisli[IO, Request[IO], Response[IO]] 的别名
-    val homeRoutes: HttpRoutes[IO] = HttpRoutes.of[IO] {
+    val homeRoutes: HttpRoutes[Task] = HttpRoutes.of[Task] {
         /**
          * 普通 Http 服务
          */
@@ -47,12 +57,12 @@ object HomeController {
             // 异步控制
             import scala.concurrent.Future
             import monix.execution.Scheduler.Implicits.global
-            implicit val cs: ContextShift[IO] = IO.contextShift(global)
+            //implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
             val json = Tweet(UUID.randomUUID().some, s"Hello, $name").asJson
-            Ok(IO.fromFuture(IO(Future{
+            Ok(Task.fromFuture(Future{
                 json
-            })))
+            }))
         }
     }
 }
